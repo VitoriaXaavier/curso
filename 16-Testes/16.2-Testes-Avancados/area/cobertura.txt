@@ -1,0 +1,4 @@
+mode: set
+teste-avancado/area/area.go:20.35,22.2 1 1
+teste-avancado/area/area.go:23.34,25.2 1 1
+teste-avancado/area/area.go:27.28,29.2 1 0
