@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	"github.com/VitoriaXaavier/curso/21-CRUD/banco"
+
+	"github.com/gorilla/mux"
 )
 
 type usuario struct {
@@ -62,4 +65,78 @@ func CriarUsuario(w http.ResponseWriter, r *http.Request) {
 
 	w.Write([]byte(fmt.Sprintf("Usuario inserido com suscesso, ID: %d", idInserido)))
 	fmt.Println(idInserido,usuario.Nome, usuario.Email)
+}
+
+func BuscarUsuarios(w http.ResponseWriter, r *http.Request) {
+	db, err := banco.ConectaBanco()
+	if err != nil {
+		w.Write([]byte("Erro ao conectar com o banco de dados"))
+		return
+	}
+	defer db.Close()
+	linhas, err := db.Query("select * from usuarios")
+	if err != nil {
+		w.Write([]byte("Erro ao selecionar as linhas da tabela"))
+		return
+	}
+	defer linhas.Close()
+
+	var usuarios []usuario
+
+	for linhas.Next() {
+		var usuario usuario
+
+		if err := linhas.Scan(&usuario.ID, &usuario.Nome, &usuario.Email); err != nil{
+			w.Write([]byte("Erro ao scannear o usuario"))
+			return
+		}
+		usuarios = append(usuarios, usuario)
+	}
+	w.WriteHeader(http.StatusOK)
+
+	if err := json.NewEncoder(w).Encode(usuarios); err != nil{
+		w.Write([]byte("Erro ao converter os usuarios para json"))
+		return
+	}
+}
+
+func BuscarUsuario(w http.ResponseWriter, r *http.Request) {
+
+	parametros := mux.Vars(r)
+
+	ID, err :=  strconv.ParseUint(parametros["id"], 10, 32)
+
+	if err != nil {
+		w.Write([]byte ("Erro ao converter a string para inteiro"))
+		return
+	}
+
+	db, err := banco.ConectaBanco()
+	if  err != nil {
+		w.Write([]byte("Erro ao conectar com o banco  de dados"))
+		return
+	}
+	defer db.Close()
+
+	linha, err := db.Query(" select * from usuarios where  id = ? ",  ID)
+	if err != nil {
+		w.Write([]byte("Erro ao selecionar o id"))
+		return
+	}
+	defer linha.Close()
+	var usuario usuario
+
+	if linha.Next() {
+		if err := linha.Scan(&usuario.ID,&usuario.Nome,&usuario.Email); err != nil{
+			w.Write([]byte("Erro ao scannear o usuario"))
+			return
+		}
+
+		if err  := json.NewEncoder(w).Encode(usuario); err != nil {
+			w.Write([]byte("Erro ao transformar em json"))
+			return
+		}
+	}
+
+
 }
