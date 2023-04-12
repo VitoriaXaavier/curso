@@ -19,8 +19,11 @@ type usuario struct {
 }
 
 func CriarUsuario(w http.ResponseWriter, r *http.Request) {
+	// ler todos os dados de um objeto io.Reader e retorna
+	// um slice de bytes ([]byte) contendo esses dados. No caso os dados digitados no body
 	corpoRequisicao, err := ioutil.ReadAll(r.Body)
 	if err != nil {
+		//escreve dados na resposta HTTP que será enviada ao cliente.
 		w.Write([]byte("Erro ao ler o corpo da requisição"))
 		return
 	}
@@ -36,7 +39,7 @@ func CriarUsuario(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Write([]byte("Erro ao conectar no banco de dados"))
 	}
-
+	
 	statement, err := db.Prepare("insert into usuarios (nome, email) values (?,?)")
 
 	if err != nil {
@@ -117,7 +120,7 @@ func BuscarUsuario(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer db.Close()
-
+	// foi usado a Query, pois aqui iremos retornar resultados diferentes cada vez que executarmos 
 	linha, err := db.Query(" select * from usuarios where  id = ? ",  ID)
 	if err != nil {
 		w.Write([]byte("Erro ao selecionar o id"))
